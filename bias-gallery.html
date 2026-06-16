@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ten biases, one crowd — and the model that lies about both</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#161d26; --panel-2:#1c2630; --line:#2b3540;
+    --peg:#3c4a58; --peg-off:#222c35;
+    --ink:#e7edf3; --ink-dim:#8b98a7; --ink-faint:#5c6775;
+    --amber:#e8a13c; --amber-soft:#f2c178; --ghost:#5fb6cc;
+    --fit:#eef3f7; --good:#76c08e; --warn:#e8865a; --bad:#e06464;
+    --mono: ui-monospace,"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
+    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  body{padding:clamp(14px,3vw,30px);line-height:1.5}
+  .wrap{max-width:1180px;margin:0 auto}
+
+  header{margin-bottom:18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);margin:0 0 8px}
+  h1{font-size:clamp(24px,4vw,40px);line-height:1.04;margin:0;font-weight:680;letter-spacing:-.015em}
+  h1 em{font-style:normal;color:var(--ink-dim)}
+  .thesis{margin:12px 0 0;max-width:66ch;color:var(--ink-dim);font-size:15px}
+  .thesis b{color:var(--ink);font-weight:600}
+
+  /* case selector */
+  .cases{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:20px}
+  @media (max-width:900px){ .cases{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:520px){ .cases{grid-template-columns:1fr} }
+  .case{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 11px 12px}
+  .case .pair{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:8px}
+  .case .duo{display:flex;gap:6px}
+  .case .duo button{flex:1;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);border-radius:8px;
+    padding:7px 6px;font-size:11.5px;font-family:var(--sans);cursor:pointer;transition:.14s;line-height:1.15}
+  .case .duo button:hover{border-color:var(--amber);background:#202b36}
+  .case .duo button.active{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber);color:var(--amber-soft)}
+  .case .duo button:focus-visible{outline:2px solid var(--ghost);outline-offset:2px}
+  .case .note{font-size:10.5px;color:var(--ink-faint);margin-top:8px;line-height:1.35;min-height:28px}
+
+  .grid{display:grid;grid-template-columns:1fr 320px;gap:18px;margin-top:18px;align-items:start}
+  @media (max-width:840px){ .grid{grid-template-columns:1fr} }
+
+  .stage{position:relative;background:linear-gradient(180deg,#10171f,#0c1117);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  canvas{display:block;width:100%;height:auto}
+  .axis-legend{display:flex;justify-content:space-between;padding:8px 16px 12px;font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--ink-faint);text-transform:uppercase}
+  .legend-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:8px;font-size:11.5px;color:var(--ink-dim)}
+  .swatch{width:22px;height:3px;border-radius:2px;flex:0 0 auto}
+  .swatch.amber{background:var(--amber)} .swatch.ghost{height:0;border-top:2px dashed var(--ghost)} .swatch.fit{background:var(--fit)}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .panel + .panel{margin-top:14px}
+  .panel h2{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim);margin:0 0 12px;font-weight:600}
+
+  .ctrl{margin:14px 0 0}
+  .ctrl:first-child{margin-top:0}
+  .ctrl label{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--ink-dim);margin-bottom:7px}
+  .ctrl label b{font-family:var(--mono);color:var(--amber-soft);font-weight:600;font-size:11.5px}
+  .ctrl .hint{font-size:10.5px;color:var(--ink-faint);margin-top:6px;line-height:1.35}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:3px;background:var(--line);border-radius:3px;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--amber);cursor:pointer;border:2px solid #1a232c}
+  input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--amber);cursor:pointer;border:2px solid #1a232c}
+  input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px rgba(95,182,204,.5)}
+
+  .toggle{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink);cursor:pointer;user-select:none;margin-top:12px}
+  .toggle input{position:absolute;opacity:0;pointer-events:none}
+  .switch{flex:0 0 auto;width:34px;height:19px;background:var(--line);border-radius:20px;position:relative;transition:.18s}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--ink-dim);transition:.18s}
+  .toggle input:checked + .switch{background:rgba(238,243,247,.3)}
+  .toggle input:checked + .switch::after{transform:translateX(15px);background:var(--fit)}
+  .toggle input:focus-visible + .switch{outline:2px solid var(--ghost);outline-offset:2px}
+
+  .runbar{display:flex;gap:8px}
+  .btn{flex:1;border:none;border-radius:9px;padding:11px;font-weight:600;font-size:13px;cursor:pointer;font-family:var(--sans);transition:.15s}
+  .btn-primary{background:var(--amber);color:#241701}
+  .btn-primary:hover{background:var(--amber-soft)}
+  .btn-ghost{background:var(--panel-2);color:var(--ink);border:1px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--ink-dim)}
+  .btn:focus-visible{outline:2px solid var(--ghost);outline-offset:2px}
+
+  .readout{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-radius:10px;overflow:hidden;margin-top:14px}
+  .stat{background:var(--panel-2);padding:10px 12px}
+  .stat .k{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .stat .v{font-family:var(--mono);font-size:18px;color:var(--ink);margin-top:3px;font-weight:600}
+  .stat .v small{font-size:10.5px;color:var(--ink-dim);font-weight:400}
+  .stat.lean .v{color:var(--amber)}
+
+  .verdict{margin-top:12px;border-radius:10px;padding:12px;font-size:12.5px;line-height:1.4;border:1px solid var(--line);background:var(--panel-2)}
+  .verdict .m{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+  .verdict .model{color:var(--fit)}
+  .verdict .truth{margin-top:8px}
+  .verdict.flag .truth{color:var(--warn)}
+  .verdict.ok .truth{color:var(--good)}
+
+  footer{margin-top:24px;border-top:1px solid var(--line);padding-top:18px;color:var(--ink-dim);font-size:13.5px;max-width:80ch}
+  footer p{margin:0 0 11px} footer b{color:var(--ink)}
+  .pull{color:var(--amber-soft);font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Behavioural economics on a quincunx</p>
+    <h1>Ten biases, one crowd. <em>And the model that lies about both.</em></h1>
+    <p class="thesis">Each pair below is the <b>same population</b> measured twice — steered two opposite ways by nothing but context. You can't predict the single person, but <b>you can move the tribe</b>. Then switch on <b>the model's fitted bell</b> and watch the deeper trap: a tool that assumes a bell curve will <b>draw one over anything</b> — so its clean μ and σ can never tell you that the data was steered, or that the shape was never normal to begin with.</p>
+  </header>
+
+  <div class="cases" id="cases"></div>
+
+  <div class="grid">
+    <div>
+      <div class="stage"><canvas id="board" width="1500" height="1180" aria-label="Bias simulation"></canvas></div>
+      <div class="axis-legend">
+        <span>◀ shows the trait <b>less</b></span><span>average</span><span>shows it <b>more</b> ▶</span>
+      </div>
+      <div class="legend-row">
+        <span><span class="swatch amber"></span> measured crowd</span>
+        <span><span class="swatch ghost"></span> unsteered baseline</span>
+        <span><span class="swatch fit"></span> the model's fitted "normal"</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h2>The two context levers</h2>
+        <div class="ctrl">
+          <label>Prime the entry <b id="angleVal">0°</b></label>
+          <input type="range" id="angle" min="-45" max="45" step="1" value="0" />
+          <div class="hint">Framing, anchors, mood, a headline. A transient tilt that bites the first pegs and fades.</div>
+        </div>
+        <div class="ctrl">
+          <label>Default nudge <b id="asymVal">0</b></label>
+          <input type="range" id="asym" min="-100" max="100" step="1" value="0" />
+          <div class="hint">The architecture's standing tilt — an opt-out, a layout, a path of least resistance. Constant at every peg, it never fades.</div>
+        </div>
+        <div class="ctrl">
+          <label>Decision coupling <b id="rhoVal">0</b></label>
+          <input type="range" id="rho" min="-80" max="80" step="1" value="0" />
+          <div class="hint">How independent each choice is. Couple them positively (chase streaks) or negatively (revert to the mean) and the bell stops being a bell.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Peg shape &amp; ball size</h2>
+        <div class="ctrl">
+          <label>Peg shape <b id="sharpVal">1.0×</b></label>
+          <input type="range" id="sharp" min="60" max="180" step="5" value="100" />
+          <div class="hint">How hard each choice tips. Sharper pegs throw further and hollow out the centre.</div>
+        </div>
+        <div class="ctrl">
+          <label>Ball size <b id="ballVal">medium</b></label>
+          <input type="range" id="ball" min="10" max="100" step="5" value="40" />
+          <div class="hint">How alike the individuals are. Bigger, more varied balls widen and roughen the crowd.</div>
+        </div>
+        <div class="ctrl">
+          <label>Rows of pegs <b id="rowsVal">14</b></label>
+          <input type="range" id="rows" min="6" max="18" step="1" value="14" />
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="runbar">
+          <button class="btn btn-primary" id="run">Drop the crowd</button>
+          <button class="btn btn-ghost" id="instant">Instant</button>
+        </div>
+        <label class="toggle"><input type="checkbox" id="showFit" checked><span class="switch"></span><span>Show the model's fitted bell</span></label>
+        <div class="readout">
+          <div class="stat lean"><div class="k">Population lean</div><div class="v" id="sLean">0.00</div></div>
+          <div class="stat"><div class="k">Spread σ</div><div class="v" id="sStd">0.00</div></div>
+          <div class="stat"><div class="k">Skew</div><div class="v" id="sSkew">0.00</div></div>
+          <div class="stat"><div class="k">Tail weight</div><div class="v" id="sKurt">0.00</div></div>
+        </div>
+        <div class="verdict" id="verdict">
+          <div class="m">The model's verdict</div>
+          <div class="model" id="vModel">Normal — μ 0.00, σ 0.00.</div>
+          <div class="truth" id="vTruth">Run a crowd to compare.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p><b>What the pairs show.</b> Pick either side of a pair and the crowd obeys — gain-frame vs loss-frame, low anchor vs high, opt-in vs opt-out — yet every individual ball stays free and unaware. That is the whole machinery of nudging: <span class="pull">we never learn how one person will fall, and we never need to. We move the tribe.</span></p>
+    <p><b>The trap underneath.</b> Leave the fitted bell switched on. It lands smoothly over a skewed crowd, a split crowd, an over-tight crowd — and still reports a tidy mean and standard deviation. If you walked in expecting a bell curve and fed it your data, it hands you a bell curve back. That is not a measurement; it is your assumption wearing the data as a costume. You can read the output forever and never see the two things that actually shaped it: <b>the steering you didn't observe (data bias)</b>, and <b>the bell you assumed before you looked (model bias)</b>. With an AI model both are hidden at once — the training data carries an entry-angle nobody logged, and the architecture carries pegs nobody chose on purpose — and the fluent, confident, perfectly-shaped output reveals neither.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const canvas=document.getElementById('board'), ctx=canvas.getContext('2d');
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const C=getComputedStyle(document.documentElement), col=n=>C.getPropertyValue(n).trim();
+  const AMBER=col('--amber'),AMBER_SOFT=col('--amber-soft'),GHOST=col('--ghost'),FIT=col('--fit'),PEG=col('--peg'),PEGOFF=col('--peg-off');
+
+  const cfg={ rows:14, angle:0, asym:0, rho:0, sharp:1, ball:0.4, count:1000, speed:3, showFit:true };
+
+  // ---------- the ten cases, as five pairs ----------
+  const CASES={
+    frame_gain:{pair:"Framing", label:"Gain frame", cfg:{angle:-26,asym:0,rho:0,sharp:1,ball:.4,rows:14},
+      note:"\u201C90% survive\u201D \u2192 the crowd plays it safe."},
+    frame_loss:{pair:"Framing", label:"Loss frame", cfg:{angle:26,asym:0,rho:0,sharp:1,ball:.4,rows:14},
+      note:"\u201C10% die\u201D \u2192 the same crowd gambles."},
+    anchor_low:{pair:"Anchoring", label:"Low anchor", cfg:{angle:-22,asym:0,rho:-30,sharp:.85,ball:.25,rows:14},
+      note:"A low number first \u2192 estimates sink and bunch."},
+    anchor_high:{pair:"Anchoring", label:"High anchor", cfg:{angle:22,asym:0,rho:-30,sharp:.85,ball:.25,rows:14},
+      note:"A high number first \u2192 estimates climb and bunch."},
+    default_in:{pair:"Default effect", label:"Opt-in", cfg:{angle:0,asym:-78,rho:0,sharp:1,ball:.35,rows:14},
+      note:"Donation opt-in: ~15% ever consent."},
+    default_out:{pair:"Default effect", label:"Opt-out", cfg:{angle:0,asym:78,rho:0,sharp:1,ball:.35,rows:14},
+      note:"Opt-out: ~90% consent \u2014 same people, flipped default."},
+    halo:{pair:"Halo / Horn", label:"Halo", cfg:{angle:8,asym:38,rho:0,sharp:1,ball:.4,rows:14},
+      note:"One good trait tints every later judgement up."},
+    horn:{pair:"Halo / Horn", label:"Horn", cfg:{angle:-8,asym:-38,rho:0,sharp:1,ball:.4,rows:14},
+      note:"One bad trait tints every later judgement down."},
+    gambler:{pair:"Reading randomness", label:"Gambler\u2019s", cfg:{angle:0,asym:0,rho:-70,sharp:.9,ball:.3,rows:14},
+      note:"Expect a reversal \u2192 everyone reverts; impossibly tight."},
+    hothand:{pair:"Reading randomness", label:"Hot-hand", cfg:{angle:0,asym:0,rho:72,sharp:1.3,ball:.5,rows:14},
+      note:"Expect the streak to last \u2192 the crowd splits in two."},
+  };
+  const PAIRS=[["frame_gain","frame_loss"],["anchor_low","anchor_high"],["default_in","default_out"],["halo","horn"],["gambler","hothand"]];
+
+  // ---------- geometry ----------
+  let geo=null,nBins=cfg.rows+1;
+  function layout(){
+    const cssW=canvas.clientWidth||760, dpr=Math.min(window.devicePixelRatio||1,2);
+    const W=Math.round(cssW*dpr), H=Math.round(W*0.785);
+    canvas.width=W; canvas.height=H;
+    const pad=W*0.06, boardTop=H*0.085, boardBottom=H*0.60, histTop=boardBottom+H*0.02, histBottom=H*0.93;
+    const cx=W/2, unit=(W/2-pad)/(cfg.rows+1), rowGap=(boardBottom-boardTop)/(cfg.rows+1);
+    geo={W,H,dpr,pad,boardTop,boardBottom,histTop,histBottom,cx,unit,rowGap};
+  }
+
+  // ---------- physics ----------
+  function simulateBall(){
+    let pos=0,hit=0,lastDir=0;
+    const B=(cfg.angle/30)*0.32, decay=0.8, asym=cfg.asym/100, rho=cfg.rho/100;
+    const posByRow=[0];
+    for(let i=0;i<cfg.rows;i++){
+      const active=true; // pairs use shape/coupling, not removals; sliders elsewhere kept simple
+      let p=0.5 + B*Math.pow(decay,hit) + asym*0.30;     // priming(fades) + default(constant)
+      if(hit>0) p += rho*0.42*lastDir;                   // decision coupling: repeat(+) or alternate(-)
+      p=Math.min(0.985,Math.max(0.015,p));
+      const dir=Math.random()<p?1:-1;
+      const step=dir*cfg.sharp*(0.85+0.35*cfg.ball);
+      pos+=step; lastDir=dir; hit++;
+      posByRow.push(pos);
+    }
+    const land=pos+(Math.random()-0.5)*(0.5+1.6*cfg.ball);
+    return {posByRow,land};
+  }
+  function binOf(land){ return Math.max(0,Math.min(nBins-1,Math.round((land+cfg.rows)/2))); }
+
+  function idealCount(b){ // unsteered baseline: full board, fair pegs
+    const c=-cfg.rows+2*b, v=cfg.rows;
+    return cfg.count*Math.exp(-(c*c)/(2*v))/Math.sqrt(2*Math.PI*v)*2;
+  }
+
+  // ---------- stats ----------
+  let bins=[],landed=[];
+  function stats(){
+    const n=landed.length; if(!n)return{mean:0,std:0,skew:0,kurt:0,n:0};
+    let m=0; for(const x of landed)m+=x; m/=n;
+    let v=0,s=0,k=0; for(const x of landed){const d=x-m;v+=d*d;s+=d*d*d;k+=d*d*d*d;}
+    v/=n; const sd=Math.sqrt(v);
+    const skew=sd>0?(s/n)/(sd*sd*sd):0, kurt=sd>0?(k/n)/(v*v)-3:0;
+    return {mean:m,std:sd,skew,kurt,n};
+  }
+  function isBimodal(){
+    // look for two peaks in the bins with a clear valley between
+    const mx=Math.max(...bins); if(mx<=0)return false;
+    const peaks=[]; for(let b=1;b<nBins-1;b++){ if(bins[b]>=bins[b-1]&&bins[b]>bins[b+1]&&bins[b]>0.45*mx)peaks.push(b); }
+    if(peaks.length<2)return false;
+    const lo=peaks[0],hi=peaks[peaks.length-1]; if(hi-lo<2)return false;
+    let valley=Infinity; for(let b=lo;b<=hi;b++)valley=Math.min(valley,bins[b]);
+    return valley<0.6*mx;
+  }
+  function paintStats(){
+    const s=stats(), lean=s.mean/2;
+    document.getElementById('sLean').innerHTML=(lean>=0?'+':'')+lean.toFixed(2);
+    document.getElementById('sStd').textContent=(s.std/2).toFixed(2);
+    document.getElementById('sSkew').textContent=(s.skew>=0?'+':'')+s.skew.toFixed(2);
+    document.getElementById('sKurt').textContent=(s.kurt>=0?'+':'')+s.kurt.toFixed(2);
+
+    const vd=document.getElementById('verdict'), model=document.getElementById('vModel'), truth=document.getElementById('vTruth');
+    if(s.n<30){ model.textContent="Normal — μ 0.00, σ 0.00."; truth.textContent="Run a crowd to compare."; vd.className="verdict"; return; }
+    model.textContent="Normal \u2014 μ "+lean.toFixed(2)+", σ "+(s.std/2).toFixed(2)+". \u201CLooks fine.\u201D";
+    let msg, flag=true;
+    if(isBimodal()) msg="Actually bimodal \u2014 two crowds, not one. The single bell is a fiction that averages them into a person who doesn\u2019t exist.";
+    else if(Math.abs(s.skew)>0.45) msg="Actually skewed "+(s.skew>0?"right":"left")+" \u2014 the mean sits where almost nobody is.";
+    else if(s.kurt>1.1) msg="Actually fat-tailed \u2014 extremes arrive far more often than \u201Cnormal\u201D promises; the σ understates the real risk.";
+    else if(s.kurt<-0.9) msg="Actually over-peaked \u2014 too tight to be random. The narrowness hides coupling the bell can\u2019t represent.";
+    else if(Math.abs(lean)>0.35) msg="Centred where you steered it, not where the baseline sits. The number is real; the \u201Cnormal\u201D framing buries the cause.";
+    else { msg="No visible break this time \u2014 but only because nothing happened to break it. You still can\u2019t see what shaped it."; flag=false; }
+    truth.textContent="Reality: "+msg;
+    vd.className="verdict "+(flag?"flag":"ok");
+  }
+
+  // ---------- drawing ----------
+  const xOf=pos=>geo.cx+pos*geo.unit;
+  function drawBoard(){
+    const g=geo;
+    const diamond=cfg.sharp>=1.2;
+    for(let i=0;i<cfg.rows;i++){
+      const y=g.boardTop+(i+1)*g.rowGap, offset=(i%2===0)?0:1;
+      for(let k=-cfg.rows;k<=cfg.rows;k+=2){
+        const pos=k+offset; if(Math.abs(pos)>cfg.rows+1)continue;
+        const x=xOf(pos), r=g.dpr*2.4;
+        ctx.fillStyle=PEG;
+        if(diamond){ ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);ctx.fillRect(-r,-r,2*r,2*r);ctx.restore(); }
+        else { ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill(); }
+      }
+    }
+    // entry + angle needle
+    const tipX=g.cx,tipY=g.boardTop,a=cfg.angle*Math.PI/180,len=g.rowGap*1.5;
+    ctx.strokeStyle='rgba(232,161,60,.55)';ctx.lineWidth=g.dpr*1.6;
+    ctx.beginPath();ctx.moveTo(tipX,tipY-g.dpr*4);ctx.lineTo(tipX+Math.sin(a)*len,tipY+Math.cos(a)*len);ctx.stroke();
+    ctx.beginPath();ctx.arc(tipX,tipY-g.dpr*4,g.dpr*3,0,Math.PI*2);ctx.fillStyle=AMBER_SOFT;ctx.fill();
+  }
+  function roundRectTop(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x,y+h);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h);ctx.closePath();ctx.fill();}
+  function gaussFit(){ const s=stats(); if(s.n<2)return null; return {mu:s.mean,sd:Math.max(s.std,0.4)}; }
+  function drawHistogram(){
+    const g=geo;
+    const fit=cfg.showFit?gaussFit():null;
+    let fitMax=0;
+    if(fit){ for(let b=0;b<nBins;b++){const c=-cfg.rows+2*b;const y=cfg.count*Math.exp(-((c-fit.mu)*(c-fit.mu))/(2*fit.sd*fit.sd))/Math.sqrt(2*Math.PI*fit.sd*fit.sd)*2;fitMax=Math.max(fitMax,y);} }
+    const idealMax=Math.max(...Array.from({length:nBins},(_,b)=>idealCount(b)));
+    const maxCount=Math.max(1,...bins,idealMax,fitMax);
+    const scale=(g.histBottom-g.histTop)/(maxCount*1.12), bw=g.unit*2*0.82;
+
+    ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(g.pad*0.5,g.histBottom+0.5);ctx.lineTo(g.W-g.pad*0.5,g.histBottom+0.5);ctx.stroke();
+
+    for(let b=0;b<nBins;b++){
+      const h=bins[b]*scale; if(h<=0)continue;
+      const x=xOf(-cfg.rows+2*b);
+      const grad=ctx.createLinearGradient(0,g.histBottom-h,0,g.histBottom);
+      grad.addColorStop(0,AMBER_SOFT);grad.addColorStop(1,'rgba(232,161,60,.5)');
+      ctx.fillStyle=grad; roundRectTop(x-bw/2,g.histBottom-h,bw,h,Math.min(4*g.dpr,bw/2));
+    }
+    // unsteered baseline
+    ctx.strokeStyle=GHOST;ctx.lineWidth=g.dpr*1.4;ctx.setLineDash([6*g.dpr,5*g.dpr]);ctx.globalAlpha=0.5;ctx.beginPath();
+    for(let b=0;b<nBins;b++){const x=xOf(-cfg.rows+2*b),y=g.histBottom-idealCount(b)*scale;b===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+    // model fit
+    if(fit){
+      ctx.beginPath();
+      for(let b=0;b<nBins;b++){const c=-cfg.rows+2*b;const y=g.histBottom-(cfg.count*Math.exp(-((c-fit.mu)*(c-fit.mu))/(2*fit.sd*fit.sd))/Math.sqrt(2*Math.PI*fit.sd*fit.sd)*2)*scale;const x=xOf(c);b===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+      const grad=ctx.createLinearGradient(0,g.histTop,0,g.histBottom);grad.addColorStop(0,'rgba(238,243,247,.10)');grad.addColorStop(1,'rgba(238,243,247,0)');
+      ctx.lineTo(xOf(cfg.rows),g.histBottom);ctx.lineTo(xOf(-cfg.rows),g.histBottom);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+      ctx.beginPath();
+      for(let b=0;b<nBins;b++){const c=-cfg.rows+2*b;const y=g.histBottom-(cfg.count*Math.exp(-((c-fit.mu)*(c-fit.mu))/(2*fit.sd*fit.sd))/Math.sqrt(2*Math.PI*fit.sd*fit.sd)*2)*scale;const x=xOf(c);b===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+      ctx.strokeStyle=FIT;ctx.lineWidth=g.dpr*2;ctx.stroke();
+    }
+  }
+  let inFlight=[];
+  function drawBalls(){const g=geo,rad=g.dpr*(2.2+cfg.ball*2.6);for(const ball of inFlight){ctx.beginPath();ctx.arc(ball.x,ball.y,rad,0,Math.PI*2);ctx.fillStyle=AMBER;ctx.fill();ctx.globalAlpha=0.16;ctx.beginPath();ctx.arc(ball.px||ball.x,ball.py||ball.y,rad*0.8,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}}
+  function render(){ctx.clearRect(0,0,geo.W,geo.H);drawBoard();drawHistogram();drawBalls();}
+
+  // ---------- loop ----------
+  let toSpawn=0,spawnAcc=0,running=false,last=0;
+  function frame(t){
+    if(!last)last=t; let dt=(t-last)/1000;last=t;if(dt>0.05)dt=0.05;
+    const g=geo;
+    if(toSpawn>0){
+      spawnAcc+=dt*cfg.speed*14; const maxFlight=6+cfg.speed*4;
+      while(spawnAcc>=1&&toSpawn>0&&inFlight.length<maxFlight){spawnAcc-=1;toSpawn--;const sim=simulateBall();inFlight.push({sim,depth:0,x:xOf(0),y:g.boardTop,px:xOf(0),py:g.boardTop,landing:false});}
+    }
+    const fall=(3.2+cfg.speed*2.2)*dt;
+    for(let i=inFlight.length-1;i>=0;i--){
+      const ball=inFlight[i];ball.px=ball.x;ball.py=ball.y;
+      if(!ball.landing){
+        ball.depth+=fall;
+        if(ball.depth>=cfg.rows){ball.landing=true;ball.bin=binOf(ball.sim.land);ball.tx=xOf(-cfg.rows+2*ball.bin);ball.ty=g.histBottom-2;}
+        else{const i0=Math.floor(ball.depth),f=ball.depth-i0,p0=ball.sim.posByRow[i0],p1=ball.sim.posByRow[i0+1],fe=f<0.5?2*f*f:1-Math.pow(-2*f+2,2)/2;ball.x=xOf(p0+(p1-p0)*fe);ball.y=g.boardTop+ball.depth*g.rowGap;}
+      } else {
+        ball.x+=(ball.tx-ball.x)*Math.min(1,fall*1.4);ball.y+=(ball.ty-ball.y)*Math.min(1,fall*1.4);
+        if(Math.abs(ball.y-ball.ty)<g.dpr*3&&Math.abs(ball.x-ball.tx)<g.dpr*3){bins[ball.bin]++;landed.push(ball.sim.land);inFlight.splice(i,1);paintStats();}
+      }
+    }
+    render();
+    if(toSpawn>0||inFlight.length>0)requestAnimationFrame(frame); else running=false;
+  }
+  function resetData(){nBins=cfg.rows+1;bins=new Array(nBins).fill(0);landed=[];inFlight=[];toSpawn=0;spawnAcc=0;layout();render();paintStats();}
+  function run(){if(running)return;resetData();if(reduceMotion){instant();return;}running=true;toSpawn=cfg.count;last=0;requestAnimationFrame(frame);}
+  function instant(){resetData();for(let i=0;i<cfg.count;i++){const sim=simulateBall();bins[binOf(sim.land)]++;landed.push(sim.land);}render();paintStats();}
+
+  // ---------- UI ----------
+  function syncControls(){
+    document.getElementById('angle').value=cfg.angle;document.getElementById('angleVal').textContent=(cfg.angle>0?'+':'')+cfg.angle+'°';
+    document.getElementById('asym').value=cfg.asym;document.getElementById('asymVal').textContent=(cfg.asym>0?'+':'')+cfg.asym;
+    document.getElementById('rho').value=cfg.rho;document.getElementById('rhoVal').textContent=(cfg.rho>0?'+':'')+cfg.rho;
+    document.getElementById('sharp').value=Math.round(cfg.sharp*100);document.getElementById('sharpVal').textContent=cfg.sharp.toFixed(2)+'×';
+    document.getElementById('ball').value=Math.round(cfg.ball*100);document.getElementById('ballVal').textContent=cfg.ball<0.33?'small':cfg.ball<0.66?'medium':'large';
+    document.getElementById('rows').value=cfg.rows;document.getElementById('rowsVal').textContent=cfg.rows;
+  }
+  function buildCases(){
+    const host=document.getElementById('cases');
+    PAIRS.forEach(([a,b])=>{
+      const A=CASES[a],B=CASES[b];
+      const card=document.createElement('div');card.className='case';
+      card.innerHTML='<div class="pair">'+A.pair+'</div><div class="duo">'+
+        '<button data-k="'+a+'">'+A.label+'</button><button data-k="'+b+'">'+B.label+'</button></div>'+
+        '<div class="note" data-note></div>';
+      host.appendChild(card);
+    });
+    host.addEventListener('click',e=>{
+      const btn=e.target.closest('button[data-k]'); if(!btn)return;
+      const k=btn.dataset.k, c=CASES[k];
+      Object.assign(cfg,c.cfg);
+      document.querySelectorAll('.case button[data-k]').forEach(x=>x.classList.remove('active'));
+      btn.classList.add('active');
+      btn.closest('.case').querySelector('[data-note]').textContent=c.note;
+      // clear other cards' notes
+      document.querySelectorAll('.case [data-note]').forEach(n=>{ if(n!==btn.closest('.case').querySelector('[data-note]')) n.textContent=''; });
+      syncControls(); run();
+    });
+  }
+  function setActive(k){document.querySelectorAll('.case button[data-k]').forEach(x=>x.classList.toggle('active',x.dataset.k===k));}
+  function clearCases(){document.querySelectorAll('.case button[data-k]').forEach(x=>x.classList.remove('active'));}
+
+  document.getElementById('angle').addEventListener('input',e=>{cfg.angle=+e.target.value;document.getElementById('angleVal').textContent=(cfg.angle>0?'+':'')+cfg.angle+'°';clearCases();});
+  document.getElementById('asym').addEventListener('input',e=>{cfg.asym=+e.target.value;document.getElementById('asymVal').textContent=(cfg.asym>0?'+':'')+cfg.asym;clearCases();});
+  document.getElementById('rho').addEventListener('input',e=>{cfg.rho=+e.target.value;document.getElementById('rhoVal').textContent=(cfg.rho>0?'+':'')+cfg.rho;clearCases();});
+  document.getElementById('sharp').addEventListener('input',e=>{cfg.sharp=+e.target.value/100;document.getElementById('sharpVal').textContent=cfg.sharp.toFixed(2)+'×';clearCases();});
+  document.getElementById('ball').addEventListener('input',e=>{cfg.ball=+e.target.value/100;document.getElementById('ballVal').textContent=cfg.ball<0.33?'small':cfg.ball<0.66?'medium':'large';clearCases();});
+  document.getElementById('rows').addEventListener('input',e=>{cfg.rows=+e.target.value;document.getElementById('rowsVal').textContent=cfg.rows;clearCases();resetData();});
+  document.getElementById('showFit').addEventListener('change',e=>{cfg.showFit=e.target.checked;render();});
+  document.getElementById('run').addEventListener('click',run);
+  document.getElementById('instant').addEventListener('click',()=>{if(!running)instant();});
+  window.addEventListener('resize',()=>{if(!running){layout();render();}});
+
+  buildCases(); syncControls(); resetData();
+  setTimeout(()=>{ const first=document.querySelector('.case button[data-k="frame_loss"]'); if(first){first.click();} }, 350);
+})();
+</script>
+</body>
+</html>
