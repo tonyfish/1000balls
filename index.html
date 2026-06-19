@@ -23,7 +23,7 @@
   .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);margin:0 0 8px}
   h1{font-size:clamp(24px,4vw,40px);line-height:1.04;margin:0;font-weight:680;letter-spacing:-.015em}
   h1 em{font-style:normal;color:var(--ink-dim)}
-  .thesis{margin:12px 0 0;max-width:66ch;color:var(--ink-dim);font-size:15px}
+  .thesis{margin:12px 0 0;max-width:min(980px,100%);color:var(--ink-dim);font-size:clamp(13.5px,1.2vw,15px)}
   .thesis b{color:var(--ink);font-weight:600}
 
   /* case selector */
@@ -31,17 +31,56 @@
   @media (max-width:900px){ .cases{grid-template-columns:repeat(2,1fr)} }
   @media (max-width:520px){ .cases{grid-template-columns:1fr} }
   .case{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 11px 12px}
-  .case .pair{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:8px}
+  .case .pair{display:flex;align-items:center;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:8px}
+  .case .pair .info{flex:0 0 auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--line);background:transparent;
+    color:var(--ink-dim);font-family:var(--sans);font-size:10px;font-weight:700;line-height:1;cursor:pointer;padding:0;
+    display:inline-flex;align-items:center;justify-content:center;transition:.14s}
+  .case .pair .info:hover{border-color:var(--amber);color:var(--amber-soft)}
+  .case .pair .info:focus-visible{outline:2px solid var(--ghost);outline-offset:2px}
   .case .duo{display:flex;gap:6px}
   .case .duo button{flex:1;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);border-radius:8px;
     padding:7px 6px;font-size:11.5px;font-family:var(--sans);cursor:pointer;transition:.14s;line-height:1.15}
   .case .duo button:hover{border-color:var(--amber);background:#202b36}
   .case .duo button.active{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber);color:var(--amber-soft)}
   .case .duo button:focus-visible{outline:2px solid var(--ghost);outline-offset:2px}
+  .case .both{width:100%;margin-top:6px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink-dim);
+    border-radius:8px;padding:6px;font-size:10.5px;font-family:var(--sans);cursor:pointer;transition:.14s;letter-spacing:.03em}
+  .case .both:hover{border-color:var(--amber);color:var(--amber-soft);background:#202b36}
+  .case .both.active{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber);color:var(--amber-soft)}
+  .case .both:focus-visible{outline:2px solid var(--ghost);outline-offset:2px}
   .case .note{font-size:10.5px;color:var(--ink-faint);margin-top:8px;line-height:1.35;min-height:28px}
+
+  /* bias info modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(8,11,15,.74);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .modal-backdrop.open{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:440px;width:100%;padding:22px 22px 18px;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+  .modal .kicker{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:9px}
+  .modal h3{margin:0 30px 8px 0;font-size:19px;font-weight:650;letter-spacing:-.01em;color:var(--ink);line-height:1.15}
+  .modal p{margin:0 0 15px;font-size:13.5px;line-height:1.52;color:var(--ink-dim)}
+  .modal .links{display:flex;flex-wrap:wrap;gap:8px}
+  .modal a{font-size:12px;color:var(--ghost);text-decoration:none;border:1px solid var(--line);border-radius:7px;padding:6px 11px;transition:.14s}
+  .modal a:hover{border-color:var(--ghost);background:rgba(95,182,204,.08)}
+  .modal .x{position:absolute;top:13px;right:13px;width:27px;height:27px;border-radius:7px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink-dim);cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;transition:.14s}
+  .modal .x:hover{border-color:var(--amber);color:var(--amber-soft)}
+  .modal .x:focus-visible,.modal a:focus-visible{outline:2px solid var(--ghost);outline-offset:2px}
 
   .grid{display:grid;grid-template-columns:1fr 320px;gap:18px;margin-top:18px;align-items:start}
   @media (max-width:840px){ .grid{grid-template-columns:1fr} }
+
+  .stagebar{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .stagebar .prog-label{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--ink-faint);min-width:72px;text-align:right;text-transform:uppercase}
+  .stagebar .prog{flex:1;height:8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .stagebar .prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--amber),var(--amber-soft));transition:width .1s linear}
+  .stagebar .speeds{display:flex;gap:4px;flex:0 0 auto}
+  .stagebar .speeds button{border:1px solid var(--line);background:var(--panel-2);color:var(--ink-dim);border-radius:7px;padding:5px 9px;font-size:11px;font-family:var(--mono);cursor:pointer;transition:.14s}
+  .stagebar .speeds button:hover{border-color:var(--amber);color:var(--amber-soft)}
+  .stagebar .speeds button.active{border-color:var(--amber);color:var(--amber-soft);box-shadow:inset 0 0 0 1px var(--amber)}
+  .stagebar .speeds button:focus-visible{outline:2px solid var(--ghost);outline-offset:2px}
+  @media (max-width:520px){ .stagebar .prog-label{min-width:0} }
+
+  .ov-legend{display:none;flex-wrap:wrap;gap:8px 16px;margin-top:8px;font-size:11.5px;color:var(--ink-dim)}
+  .ov-legend span{display:inline-flex;align-items:center;gap:7px}
+  .ov-legend i{width:11px;height:11px;border-radius:3px;display:inline-block;flex:0 0 auto}
 
   .stage{position:relative;background:linear-gradient(180deg,#10171f,#0c1117);border:1px solid var(--line);border-radius:14px;overflow:hidden}
   canvas{display:block;width:100%;height:auto}
@@ -111,6 +150,16 @@
 
   <div class="grid">
     <div>
+      <div class="stagebar">
+        <span class="prog-label" id="progLabel">0%</span>
+        <div class="prog"><div class="prog-fill" id="progFill"></div></div>
+        <div class="speeds" id="speeds">
+          <button data-mult="1" class="active">1&times;</button>
+          <button data-mult="2">2&times;</button>
+          <button data-mult="5">5&times;</button>
+          <button data-mult="10">10&times;</button>
+        </div>
+      </div>
       <div class="stage"><canvas id="board" width="1500" height="1180" aria-label="Bias simulation"></canvas></div>
       <div class="axis-legend">
         <span>◀ shows the trait <b>less</b></span><span>average</span><span>shows it <b>more</b> ▶</span>
@@ -120,6 +169,7 @@
         <span><span class="swatch ghost"></span> unsteered baseline</span>
         <span><span class="swatch fit"></span> the model's fitted "normal"</span>
       </div>
+      <div class="ov-legend" id="ovLegend"></div>
     </div>
 
     <div>
@@ -187,6 +237,16 @@
   </footer>
 </div>
 
+<div class="modal-backdrop" id="biasModal" role="dialog" aria-modal="true" aria-labelledby="bmTitle">
+  <div class="modal">
+    <button class="x" id="bmClose" aria-label="Close">&times;</button>
+    <div class="kicker" id="bmKicker"></div>
+    <h3 id="bmTitle"></h3>
+    <p id="bmBody"></p>
+    <div class="links" id="bmLinks"></div>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -194,8 +254,9 @@
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const C=getComputedStyle(document.documentElement), col=n=>C.getPropertyValue(n).trim();
   const AMBER=col('--amber'),AMBER_SOFT=col('--amber-soft'),GHOST=col('--ghost'),FIT=col('--fit'),PEG=col('--peg'),PEGOFF=col('--peg-off');
+  const VIOLET='#a98cf0', VIOLET_SOFT='#c7b4f7';
 
-  const cfg={ rows:14, angle:0, asym:0, rho:0, sharp:1, ball:0.4, count:1000, speed:3, showFit:true };
+  const cfg={ rows:14, angle:0, asym:0, rho:0, sharp:1, ball:0.4, count:1000, speed:3, speedMult:1, showFit:true };
 
   // ---------- the ten cases, as five pairs ----------
   const CASES={
@@ -220,7 +281,32 @@
     hothand:{pair:"Reading randomness", label:"Hot-hand", cfg:{angle:0,asym:0,rho:72,sharp:1.3,ball:.5,rows:14},
       note:"Expect the streak to last \u2192 the crowd splits in two."},
   };
-  const PAIRS=[["frame_gain","frame_loss"],["anchor_low","anchor_high"],["default_in","default_out"],["halo","horn"],["gambler","hothand"]];
+  const PAIRS=[
+    ["frame_gain","frame_loss","Both frames \u25B8"],
+    ["anchor_low","anchor_high","Both anchors \u25B8"],
+    ["default_in","default_out","Both defaults \u25B8"],
+    ["halo","horn","Both: halo + horn \u25B8"],
+    ["gambler","hothand","Both readings \u25B8"],
+  ];
+
+  // short explainer + Wikipedia link(s) per pair, keyed by the pair label
+  const BIAS_INFO={
+    "Framing":{title:"Framing effect",
+      body:"People react differently to the same facts depending on how they\u2019re worded. \u201C90% survive\u201D and \u201C10% die\u201D describe identical odds, yet the gain wording pushes a crowd toward the safe option while the loss wording pushes the very same crowd toward the gamble.",
+      links:[["Framing effect \u2192","https://en.wikipedia.org/wiki/Framing_effect_(psychology)"]]},
+    "Anchoring":{title:"Anchoring",
+      body:"An initial number \u2014 even an arbitrary one \u2014 becomes a reference point that drags later estimates toward it. Show a low figure first and the crowd\u2019s guesses sink and bunch beneath it; show a high one and they climb. The anchor sticks even when people know it\u2019s irrelevant.",
+      links:[["Anchoring \u2192","https://en.wikipedia.org/wiki/Anchoring_(cognitive_bias)"]]},
+    "Default effect":{title:"Default effect",
+      body:"People tend to stay with whatever option is pre-selected. Flipping a choice from opt-in to opt-out \u2014 same people, same offer \u2014 can swing participation from a small minority to a large majority. Inertia, effort, and an implied recommendation all push toward the default.",
+      links:[["Default effect \u2192","https://en.wikipedia.org/wiki/Default_effect"]]},
+    "Halo / Horn":{title:"Halo &amp; Horn effect",
+      body:"One salient trait colours every later judgement. A single good quality (the halo) makes a person seem better across the board; a single bad one (the horn) drags the whole impression down \u2014 regardless of evidence about the other traits.",
+      links:[["Halo effect \u2192","https://en.wikipedia.org/wiki/Halo_effect"],["Horn effect \u2192","https://en.wikipedia.org/wiki/Horn_effect"]]},
+    "Reading randomness":{title:"Misreading randomness",
+      body:"Two opposite errors about chance. The gambler\u2019s fallacy expects a run to reverse \u2014 \u201Cit\u2019s due to change\u201D \u2014 so guesses revert and bunch impossibly tight. The hot-hand fallacy expects a streak to continue, splitting the crowd toward the extremes. Both read patterns into independent events.",
+      links:[["Gambler\u2019s fallacy \u2192","https://en.wikipedia.org/wiki/Gambler%27s_fallacy"],["Hot hand \u2192","https://en.wikipedia.org/wiki/Hot_hand"]]},
+  };
 
   // ---------- geometry ----------
   let geo=null,nBins=cfg.rows+1;
@@ -259,7 +345,30 @@
   }
 
   // ---------- stats ----------
-  let bins=[],landed=[];
+  // Each scenario is a "layer" with its own bins/landed; overlay draws several at once.
+  // bins/landed always point at the ACTIVE (current) layer so existing stat code is unchanged.
+  const LAYER_STYLES=[
+    {top:AMBER_SOFT,  bot:'rgba(232,161,60,.5)',  swatch:AMBER},
+    {top:VIOLET_SOFT, bot:'rgba(169,140,240,.5)', swatch:VIOLET},
+  ];
+  let layers=[], bins=[], landed=[], seqInfo='';
+  function newLayer(label){
+    const st=LAYER_STYLES[layers.length % LAYER_STYLES.length];
+    const L={bins:new Array(nBins).fill(0), landed:[], label:label||'', top:st.top, bot:st.bot, swatch:st.swatch};
+    layers.push(L); bins=L.bins; landed=L.landed; renderOverlayLegend(); return L;
+  }
+  function renderOverlayLegend(){
+    const el=document.getElementById('ovLegend'); if(!el)return;
+    if(layers.length<=1){ el.style.display='none'; el.innerHTML=''; return; }
+    el.style.display='flex';
+    el.innerHTML=layers.map(L=>'<span><i style="background:'+L.swatch+'"></i>'+(L.label||'scenario')+'</span>').join('');
+  }
+  function setProgress(frac, info){
+    const pct=Math.max(0,Math.min(100,Math.round((frac||0)*100)));
+    const f=document.getElementById('progFill'), l=document.getElementById('progLabel');
+    if(f) f.style.width=pct+'%';
+    if(l) l.textContent=(info?info+' \u00B7 ':'')+pct+'%';
+  }
   function stats(){
     const n=landed.length; if(!n)return{mean:0,std:0,skew:0,kurt:0,n:0};
     let m=0; for(const x of landed)m+=x; m/=n;
@@ -327,24 +436,31 @@
     let fitMax=0;
     if(fit){ for(let b=0;b<nBins;b++){const c=-cfg.rows+2*b;const y=cfg.count*Math.exp(-((c-fit.mu)*(c-fit.mu))/(2*fit.sd*fit.sd))/Math.sqrt(2*Math.PI*fit.sd*fit.sd)*2;fitMax=Math.max(fitMax,y);} }
     const idealMax=Math.max(...Array.from({length:nBins},(_,b)=>idealCount(b)));
-    const maxCount=Math.max(1,...bins,idealMax,fitMax);
+    let binMax=0; for(const L of layers){ for(const v of L.bins){ if(v>binMax)binMax=v; } }
+    const maxCount=Math.max(1,binMax,idealMax,fitMax);
     const scale=(g.histBottom-g.histTop)/(maxCount*1.12), bw=g.unit*2*0.82;
 
     ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(g.pad*0.5,g.histBottom+0.5);ctx.lineTo(g.W-g.pad*0.5,g.histBottom+0.5);ctx.stroke();
 
-    for(let b=0;b<nBins;b++){
-      const h=bins[b]*scale; if(h<=0)continue;
-      const x=xOf(-cfg.rows+2*b);
-      const grad=ctx.createLinearGradient(0,g.histBottom-h,0,g.histBottom);
-      grad.addColorStop(0,AMBER_SOFT);grad.addColorStop(1,'rgba(232,161,60,.5)');
-      ctx.fillStyle=grad; roundRectTop(x-bw/2,g.histBottom-h,bw,h,Math.min(4*g.dpr,bw/2));
+    // bars — one translucent set per scenario, overlaid
+    const multi=layers.length>1;
+    for(const L of layers){
+      ctx.globalAlpha = multi?0.62:1;
+      for(let b=0;b<nBins;b++){
+        const h=L.bins[b]*scale; if(h<=0)continue;
+        const x=xOf(-cfg.rows+2*b);
+        const grad=ctx.createLinearGradient(0,g.histBottom-h,0,g.histBottom);
+        grad.addColorStop(0,L.top);grad.addColorStop(1,L.bot);
+        ctx.fillStyle=grad; roundRectTop(x-bw/2,g.histBottom-h,bw,h,Math.min(4*g.dpr,bw/2));
+      }
     }
+    ctx.globalAlpha=1;
     // unsteered baseline
     ctx.strokeStyle=GHOST;ctx.lineWidth=g.dpr*1.4;ctx.setLineDash([6*g.dpr,5*g.dpr]);ctx.globalAlpha=0.5;ctx.beginPath();
     for(let b=0;b<nBins;b++){const x=xOf(-cfg.rows+2*b),y=g.histBottom-idealCount(b)*scale;b===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
     ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
-    // model fit
+    // model fit (over the active scenario)
     if(fit){
       ctx.beginPath();
       for(let b=0;b<nBins;b++){const c=-cfg.rows+2*b;const y=g.histBottom-(cfg.count*Math.exp(-((c-fit.mu)*(c-fit.mu))/(2*fit.sd*fit.sd))/Math.sqrt(2*Math.PI*fit.sd*fit.sd)*2)*scale;const x=xOf(c);b===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
@@ -356,19 +472,20 @@
     }
   }
   let inFlight=[];
-  function drawBalls(){const g=geo,rad=g.dpr*(2.2+cfg.ball*2.6);for(const ball of inFlight){ctx.beginPath();ctx.arc(ball.x,ball.y,rad,0,Math.PI*2);ctx.fillStyle=AMBER;ctx.fill();ctx.globalAlpha=0.16;ctx.beginPath();ctx.arc(ball.px||ball.x,ball.py||ball.y,rad*0.8,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}}
+  function drawBalls(){const g=geo,rad=g.dpr*(2.2+cfg.ball*2.6),col=(layers.length?layers[layers.length-1].swatch:AMBER);for(const ball of inFlight){ctx.beginPath();ctx.arc(ball.x,ball.y,rad,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();ctx.globalAlpha=0.16;ctx.beginPath();ctx.arc(ball.px||ball.x,ball.py||ball.y,rad*0.8,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}}
   function render(){ctx.clearRect(0,0,geo.W,geo.H);drawBoard();drawHistogram();drawBalls();}
 
   // ---------- loop ----------
-  let toSpawn=0,spawnAcc=0,running=false,last=0;
+  let toSpawn=0,spawnAcc=0,running=false,last=0,rafId=null,onDone=null,seqTimer=null;
   function frame(t){
     if(!last)last=t; let dt=(t-last)/1000;last=t;if(dt>0.05)dt=0.05;
     const g=geo;
+    const s=cfg.speed*cfg.speedMult;
     if(toSpawn>0){
-      spawnAcc+=dt*cfg.speed*14; const maxFlight=6+cfg.speed*4;
+      spawnAcc+=dt*s*14; const maxFlight=Math.min(150,6+s*4);
       while(spawnAcc>=1&&toSpawn>0&&inFlight.length<maxFlight){spawnAcc-=1;toSpawn--;const sim=simulateBall();inFlight.push({sim,depth:0,x:xOf(0),y:g.boardTop,px:xOf(0),py:g.boardTop,landing:false});}
     }
-    const fall=(3.2+cfg.speed*2.2)*dt;
+    const fall=(3.2+s*2.2)*dt;
     for(let i=inFlight.length-1;i>=0;i--){
       const ball=inFlight[i];ball.px=ball.x;ball.py=ball.y;
       if(!ball.landing){
@@ -381,11 +498,81 @@
       }
     }
     render();
-    if(toSpawn>0||inFlight.length>0)requestAnimationFrame(frame); else running=false;
+    setProgress(landed.length/cfg.count, seqInfo);
+    if(toSpawn>0||inFlight.length>0){ rafId=requestAnimationFrame(frame); }
+    else { running=false; rafId=null; setProgress(1,seqInfo); const cb=onDone; onDone=null; if(cb)cb(); }
   }
-  function resetData(){nBins=cfg.rows+1;bins=new Array(nBins).fill(0);landed=[];inFlight=[];toSpawn=0;spawnAcc=0;layout();render();paintStats();}
-  function run(){if(running)return;resetData();if(reduceMotion){instant();return;}running=true;toSpawn=cfg.count;last=0;requestAnimationFrame(frame);}
-  function instant(){resetData();for(let i=0;i<cfg.count;i++){const sim=simulateBall();bins[binOf(sim.land)]++;landed.push(sim.land);}render();paintStats();}
+  function fillInstant(){for(let i=0;i<cfg.count;i++){const sim=simulateBall();bins[binOf(sim.land)]++;landed.push(sim.land);}}
+  function stopAnim(){ if(rafId){cancelAnimationFrame(rafId);rafId=null;} if(seqTimer){clearTimeout(seqTimer);seqTimer=null;} running=false;toSpawn=0;spawnAcc=0;inFlight=[];onDone=null; }
+  function cancelSequence(){ if(seqTimer){clearTimeout(seqTimer);seqTimer=null;} onDone=null; }
+  // fresh start: clear all overlay layers, begin one new layer
+  function resetData(label){ nBins=cfg.rows+1; layers=[]; inFlight=[]; toSpawn=0; spawnAcc=0; newLayer(label); layout(); render(); paintStats(); setProgress(0,seqInfo); }
+  // overlay: keep existing layers on screen, add a new active one on top
+  function addLayer(label){ nBins=cfg.rows+1; inFlight=[]; toSpawn=0; spawnAcc=0; newLayer(label); render(); setProgress(0,seqInfo); }
+  function startAnim(done){
+    if(reduceMotion){ fillInstant(); render(); paintStats(); setProgress(1,seqInfo); if(done)done(); return; }
+    onDone=done||null; running=true; toSpawn=cfg.count; last=0; rafId=requestAnimationFrame(frame);
+  }
+  function runAnimated(done){ stopAnim(); resetData(); startAnim(done); }
+  function fillNow(){ stopAnim(); resetData(); fillInstant(); render(); paintStats(); setProgress(1,seqInfo); }
+
+  // ---------- selection + playback ----------
+  // selection = {type:'single', key} | {type:'both', keys:[a,b], btn}
+  let selection=null;
+  function highlightSingle(k){
+    document.querySelectorAll('.case button').forEach(x=>x.classList.remove('active'));
+    const btn=document.querySelector('.case button[data-k="'+k+'"]'); if(!btn)return;
+    btn.classList.add('active');
+    const card=btn.closest('.case');
+    document.querySelectorAll('.case [data-note]').forEach(n=>{ n.textContent=(n===card.querySelector('[data-note]'))?CASES[k].note:''; });
+  }
+  function highlightBoth(keys, bothBtn){
+    document.querySelectorAll('.case button').forEach(x=>x.classList.remove('active'));
+    keys.forEach(k=>{ const b=document.querySelector('.case button[data-k="'+k+'"]'); if(b)b.classList.add('active'); });
+    if(bothBtn) bothBtn.classList.add('active');
+  }
+  function noteFor(k){
+    const card=document.querySelector('.case button[data-k="'+k+'"]').closest('.case');
+    document.querySelectorAll('.case [data-note]').forEach(n=>{ n.textContent=(n===card.querySelector('[data-note]'))?CASES[k].note:''; });
+  }
+
+  // run two (or more) cases back-to-back; both buttons stay lit; later scenarios OVERLAY (no wipe)
+  function runSequence(keys, instant, bothBtn){
+    stopAnim();
+    highlightBoth(keys, bothBtn);
+    let i=0;
+    function step(){
+      if(i>=keys.length) return;
+      const k=keys[i++];
+      seqInfo = keys.length>1 ? (i+'/'+keys.length) : '';
+      Object.assign(cfg, CASES[k].cfg);
+      highlightBoth(keys, bothBtn);   // keep BOTH lit; don't swap
+      noteFor(k);                      // note tracks the reading currently on screen
+      syncControls();
+      const first = (i===1);
+      if(instant){
+        stopAnim();
+        if(first) resetData(CASES[k].label); else addLayer(CASES[k].label);
+        fillInstant(); render(); paintStats(); setProgress(1,seqInfo);
+        if(i<keys.length) seqTimer=setTimeout(step, 750);
+      } else {
+        stopAnim();
+        if(first) resetData(CASES[k].label); else addLayer(CASES[k].label);
+        startAnim(()=>{ if(i<keys.length) seqTimer=setTimeout(step, 750); });
+      }
+    }
+    step();
+  }
+
+  // play whatever is currently selected; the top Run / Instant buttons route through here
+  function play(instant){
+    if(selection && selection.type==='both'){ runSequence(selection.keys, instant, selection.btn); return; }
+    seqInfo='';
+    if(selection && selection.type==='single'){ Object.assign(cfg, CASES[selection.key].cfg); highlightSingle(selection.key); syncControls(); }
+    if(instant) fillNow(); else runAnimated(null);
+  }
+  function run(){ play(false); }
+  function instant(){ play(true); }
 
   // ---------- UI ----------
   function syncControls(){
@@ -398,28 +585,39 @@
   }
   function buildCases(){
     const host=document.getElementById('cases');
-    PAIRS.forEach(([a,b])=>{
+    PAIRS.forEach(([a,b,bothLabel])=>{
       const A=CASES[a],B=CASES[b];
       const card=document.createElement('div');card.className='case';
-      card.innerHTML='<div class="pair">'+A.pair+'</div><div class="duo">'+
-        '<button data-k="'+a+'">'+A.label+'</button><button data-k="'+b+'">'+B.label+'</button></div>'+
+      card.innerHTML='<div class="pair"><span>'+A.pair+'</span>'+
+          '<button class="info" data-pair="'+A.pair+'" aria-label="About '+A.pair+'" title="What is this?">i</button></div>'+
+        '<div class="duo">'+
+          '<button data-k="'+a+'">'+A.label+'</button><button data-k="'+b+'">'+B.label+'</button></div>'+
+        '<button class="both" data-both="'+a+','+b+'">'+bothLabel+'</button>'+
         '<div class="note" data-note></div>';
       host.appendChild(card);
     });
     host.addEventListener('click',e=>{
+      const info=e.target.closest('button.info');
+      if(info){ openBiasModal(info.dataset.pair); return; }
+      const both=e.target.closest('button[data-both]');
+      if(both){ selection={type:'both', keys:both.dataset.both.split(','), btn:both}; play(false); return; }
       const btn=e.target.closest('button[data-k]'); if(!btn)return;
-      const k=btn.dataset.k, c=CASES[k];
-      Object.assign(cfg,c.cfg);
-      document.querySelectorAll('.case button[data-k]').forEach(x=>x.classList.remove('active'));
-      btn.classList.add('active');
-      btn.closest('.case').querySelector('[data-note]').textContent=c.note;
-      // clear other cards' notes
-      document.querySelectorAll('.case [data-note]').forEach(n=>{ if(n!==btn.closest('.case').querySelector('[data-note]')) n.textContent=''; });
-      syncControls(); run();
+      selection={type:'single', key:btn.dataset.k}; play(false);
     });
   }
+  function openBiasModal(pairKey){
+    const info=BIAS_INFO[pairKey]; if(!info)return;
+    document.getElementById('bmKicker').textContent=pairKey;
+    document.getElementById('bmTitle').innerHTML=info.title;
+    document.getElementById('bmBody').innerHTML=info.body;
+    const lw=document.getElementById('bmLinks'); lw.innerHTML='';
+    info.links.forEach(([label,href])=>{ const a=document.createElement('a'); a.href=href; a.target='_blank'; a.rel='noopener noreferrer'; a.innerHTML=label; lw.appendChild(a); });
+    document.getElementById('biasModal').classList.add('open');
+    document.getElementById('bmClose').focus();
+  }
+  function closeBiasModal(){ document.getElementById('biasModal').classList.remove('open'); }
   function setActive(k){document.querySelectorAll('.case button[data-k]').forEach(x=>x.classList.toggle('active',x.dataset.k===k));}
-  function clearCases(){document.querySelectorAll('.case button[data-k]').forEach(x=>x.classList.remove('active'));}
+  function clearCases(){document.querySelectorAll('.case button').forEach(x=>x.classList.remove('active'));cancelSequence();selection=null;seqInfo='';}
 
   document.getElementById('angle').addEventListener('input',e=>{cfg.angle=+e.target.value;document.getElementById('angleVal').textContent=(cfg.angle>0?'+':'')+cfg.angle+'°';clearCases();});
   document.getElementById('asym').addEventListener('input',e=>{cfg.asym=+e.target.value;document.getElementById('asymVal').textContent=(cfg.asym>0?'+':'')+cfg.asym;clearCases();});
@@ -429,7 +627,15 @@
   document.getElementById('rows').addEventListener('input',e=>{cfg.rows=+e.target.value;document.getElementById('rowsVal').textContent=cfg.rows;clearCases();resetData();});
   document.getElementById('showFit').addEventListener('change',e=>{cfg.showFit=e.target.checked;render();});
   document.getElementById('run').addEventListener('click',run);
-  document.getElementById('instant').addEventListener('click',()=>{if(!running)instant();});
+  document.getElementById('instant').addEventListener('click',instant);
+  document.getElementById('speeds').addEventListener('click',e=>{
+    const b=e.target.closest('button[data-mult]'); if(!b)return;
+    cfg.speedMult=+b.dataset.mult;
+    document.querySelectorAll('#speeds button').forEach(x=>x.classList.toggle('active',x===b));
+  });
+  document.getElementById('bmClose').addEventListener('click',closeBiasModal);
+  document.getElementById('biasModal').addEventListener('click',e=>{ if(e.target.id==='biasModal') closeBiasModal(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeBiasModal(); });
   window.addEventListener('resize',()=>{if(!running){layout();render();}});
 
   buildCases(); syncControls(); resetData();
